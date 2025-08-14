@@ -18,12 +18,12 @@ export default function HomePage() {
         <PersonaCard
           name="Hitesh Choudhary"
           image="/hitesh.png"
-          personaId="hitesh"
+          personaId="hiteshPersona"
         />
         <PersonaCard
           name="Piyush Garg"
           image="/piyush.webp"
-          personaId="piyush"
+          personaId="piyushPersona"
         />
       </section>
 
