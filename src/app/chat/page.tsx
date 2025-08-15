@@ -18,7 +18,8 @@ export default function ChatPage() {
   const searchParams = useSearchParams();
   const personaKey = (searchParams.get("persona") || "hiteshPersona") as keyof typeof personaDetails;
   const currentPersona = personaDetails[personaKey] || personaDetails.hiteshPersona;
-
+  
+  const [loading, setLoading] = useState(false); // Loading state
   const [messages, setMessages] = useState<Message[]>([
     { sender: "bot", text: `Hello! I am ${currentPersona.name}. How can I help you today?` },
   ]);
@@ -27,14 +28,15 @@ export default function ChatPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]); // Added loading to the dependency array
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setLoading(true); // Set loading to true before the API call
 
     try {
       const res = await fetch("/api", {
@@ -50,20 +52,21 @@ export default function ChatPage() {
       });
 
       if (!res.ok) throw new Error(`Error: ${res.status}`);
-    //   console.log(res)
-const data = await res.json();
-console.log(data); 
-if (data && data.reply) { 
-  setMessages((prev) => [...prev, { sender: "bot", text: data.reply }]);
-} else {
-  setMessages((prev) => [...prev, { sender: "bot", text: "Sorry, I received an invalid response." }]);
-}
+      
+      const data = await res.json();
+      if (data && data.reply) {
+        setMessages((prev) => [...prev, { sender: "bot", text: data.reply }]);
+      } else {
+        setMessages((prev) => [...prev, { sender: "bot", text: "Sorry, I received an invalid response." }]);
+      }
     } catch (err) {
       console.error(err);
       setMessages((prev) => [
         ...prev,
         { sender: "bot", text: "Sorry, something went wrong." },
       ]);
+    } finally {
+      setLoading(false); // Always set loading to false after the API call finishes
     }
   };
 
@@ -97,6 +100,14 @@ if (data && data.reply) {
               {msg.text}
             </motion.div>
           ))}
+
+          {/* Loading Indicator */}
+          {loading && (
+            <div className="flex justify-center p-3">
+                <span className="text-gray-400">Thinking...</span>
+            </div>
+          )}
+
           <div ref={bottomRef} />
         </div>
 
